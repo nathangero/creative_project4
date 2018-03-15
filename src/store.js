@@ -7,50 +7,32 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-      hand: [],
-      dealer: [],
+    deckId: '',
+    hand: [],
+    dealer: [],
   },
   getters: {
-      hand: state => state.hand,
-      dealer: state => state.dealer,
+    deck: state => state.deck,
+    hand: state => state.hand,
+    dealer: state => state.dealer,
   },
   mutations: {
-      setHand (state, hand) {
-          state.hand = hand;
-      },
-      setDealer (state, dealer) {
-        state.dealer = dealer;
-      },
+    setDeckId (state, id) {
+      state.deckId = id;
+      console.log("@setDeckId: " + state.deckId);
+    },
   },
   actions: {
-    getItems(context) {
-        console.log("getting items");
-        axios.get("/api/items").then(response => {
-          console.log(response.data);
-          // context.commit('setHand', response.data);
+    start(context) {
+      console.log("Start new game");
+      axios.post('/api/items').then(response => {
+        console.log("grabbing response.data");
+        console.log(response.data.deck_id);
+        context.commit('setDeckId', response.data.deck_id);
+        return true;
+      }).catch(err => {
 
-          return true;
-        }).catch(err => {
-        });
-      },
-      addItem(context, item) {
-        axios.post("/api/items", item).then(response => {
-          return context.dispatch('getItems');
-        }).catch(err => {
-        });
-      },
-      updateItem(context, item) {
-        axios.put("/api/items/" + item.id, item).then(response => {
-          return true;
-        }).catch(err => {
-        });
-      },
-      deleteItem(context, item) {
-        axios.delete("/api/items/" + item.id).then(response => {
-      return context.dispatch('getItems');
-        }).catch(err => {
-        });
-      }
-  
+      })
+    },
   }
 });
