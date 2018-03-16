@@ -1,6 +1,7 @@
 <template>
     <div id="blackjack">
-        <h1>Welcome to blackjack</h1>
+        <h1>Blackjack</h1>
+        <button id="about" v-on:click="displayAbout()">?</button>
         <button id="startbutton" v-on:click="start()">Start new game</button>
         <p v-if="gameStarted === true">
             <button id="playbuttons" v-on:click="drawCard">Hit</button>
@@ -37,6 +38,7 @@ export default {
             dealerHand: [], // need to keep track of the dealer's cards
             dPoints: 0,
             gameEnd: false,
+            about: '',
         }
     },
     methods: {
@@ -125,6 +127,9 @@ export default {
                 alert("Draw! You both busted! \nYour points: " + this.pPoints + "\nDealer's points: " + this.dPoints);
             } 
         },
+        displayAbout: function() {
+            alert("Welcome to Blackjack!\nYour goal is the beat the dealer by scoring 21 (blackjack) or under, and your points must beat those of the dealer's.\n\nRules:\n-Hitting adds 1 card to your hand.\n-Standing ends the game and both yours and the dealer's total points are compared at the end.\n\nYou'll see a pop up like this that tells you if you've won, lost, or tied.\n\nPress the 'Start new game' button to begin!");
+        }
     }
 }
 </script>
@@ -144,6 +149,18 @@ h1 {
     margin-bottom: -1px;
     padding-bottom: 20px;
 }
+
+#about {
+    position:absolute;
+    top: 0;
+    right: 0;
+    margin-top: 12px;
+    margin-right: 14px;
+    border-radius: 20%;
+    border: none;
+    font-size: 30px;
+}
+
 
 #startbutton {
     width: 10;

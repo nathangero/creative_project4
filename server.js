@@ -54,7 +54,6 @@ var draw = function(req, res) {
 }
 
 var dealerDraw = function(req, res, isGameOver) {
-  console.log("dealer hit");
   let data = [];
 
   axios.get('https://deckofcardsapi.com/api/deck/' + deckId + '/draw/?count=2').then(response => {
@@ -77,10 +76,8 @@ var dealerDraw = function(req, res, isGameOver) {
 }
 
 var stand = function(req, res) {
-  console.log("@stand");
   // Since dealer always goes last, the dealer must still hit if below 17.
   if (dPoints < 17) {
-    console.log("1st");
     dealerDraw(req,res,true);
   }
   else {
@@ -90,7 +87,6 @@ var stand = function(req, res) {
 }
 
 var sendGame = function(deckId, res) {
-  console.log("sending game");
   let game = {
     deckId: deckId,
     shuffled: true, // Shuffled is always true when a game has already started
@@ -141,7 +137,7 @@ app.post('/api/blackjack/', (req, res) => {
   axios.get('https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1').then(response => {
     data = response.data;
     deckId = response.data.deck_id;
-    console.log("deckId: ",deckId);
+    console.log("new deckId: ",deckId);
   }).then(response => {
       // Second get the player's starting cards
       axios.get('https://deckofcardsapi.com/api/deck/' + deckId + '/draw/?count=2').then(response => {
