@@ -1,7 +1,7 @@
 <template>
     <div id="blackjack">
         <h1>Welcome to blackjack</h1>
-        <button v-on:click="start($event)">Start new game</button>
+        <button id="startbutton" v-on:click="start()">Start new game</button>
         <p v-if="gameStarted === true">
             <button id="playbuttons" v-on:click="drawCard">Hit</button>
             <button id="playbuttons" v-on:click="stand">Stand</button>
@@ -11,7 +11,7 @@
         <div class="cardWrapper" v-if="playerHand.length > 0">
             <p>Dealer's Hole</p> 
             <p><img v-bind:src="this.dealerHand[0].image" width="80" height="110"></p>
-            <p>Your Card count: {{ points }} </p>
+            <p>Your Card count: {{ pPoints }} </p>
             <p id="hand" v-for="card in playerHand">
                 <img v-bind:src="card.image" v-bind:alt="card.alt"> 
             </p>
@@ -40,109 +40,91 @@ export default {
         }
     },
     methods: {
-        start: function(event) {
-            console.log("start button hit")
+        start: function() {
             this.loading = true;
 
             axios.post('/api/blackjack').then(response => {
-                console.log('response', response.data);
-                console.log('deckId:', response.data.deckId);
-
+                // Set the front end variables
+                this.playerHand = response.data.playerHand;
+                this.pPoints = response.data.playerPoints;
+                this.dealerHand = response.data.dealerHand;
+                this.dPoints = response.data.dealerPoints;
+                this.gameStarted = response.data.gameStarted;
+                
                 // Check for blackjack
+                if (this.pPoints === this.BLACKJACK) {
+                    alert("~~~* BLACKJACK *~~~\nYou won!");
+                }
+
+                document.getElementById("footer").style.position = 'relative';
                 return true;
             }).catch(err => {
                 console.log(err);
             });        
         },
         drawCard: function() {
-            // fetch('https://deckofcardsapi.com/api/deck/' + this.deckID + '/draw/?count=1').then(response => {
-            //     return response.json();
-            // }).then (json => {
-            //     // console.log("player draws");
+            axios.put('/api/blackjack', {
+                action: 'draw',
+            }).then(response => {
+                // Update the variables with the new values
+                this.playerHand = response.data.playerHand;
+                this.pPoints = response.data.playerPoints;
+                this.dealerHand = response.data.dealerHand;
+                this.dPoints = response.data.dealerPoints;
+                this.gameEnd = response.data.gameEnd;
 
-            //     this.hand.push(json.cards[0]);
-            //     this.points =  this.calculate(this.hand);
-            //     // console.log(this.points);
-
-            //     // Check if player busts and game isn't over
-            //     if (this.points === this.BLACKJACK) {
-            //         this.stand(); // End the game right away
-            //     }
-            //     if (this.points > this.BLACKJACK && !this.gameEnd) { 
-            //         alert("You busted! \nTotal points: " + this.points + "\nDealer's points: " + this.dealerPoints);
-            //         this.gameEnd = true;
-            //     }
-            //     else if (this.dealerPoints < 17) { // Dealer must hit if below 17
-            //         this.dealerDraw();
-            //     }
-            //     // Check if both have 21 points
-            //     if (this.points === this.BLACKJACK && this.dealerPoints === this.BLACKJACK) {
-            //         alert("Draw!");
-            //         this.gameEnd = true;
-            //     }
-            // })
-        },
-        dealerDraw: function() {
-            // fetch('https://deckofcardsapi.com/api/deck/' + this.deckID + '/draw/?count=1').then(response => {
-            //     return response.json();
-            // }).then (json => {
-            //     // console.log("Dealer draws");
-            //     // console.log("pre draw dealer points: " + this.dealerPoints);
-
-            //     // Check Dealer's points
-            //     this.dealerHand.push(json.cards[0]);
-            //     this.dealerPoints = this.calculate(this.dealerHand);
-            //     // console.log("new points: " + this.dealerPoints);
-            //     // console.log("dealer hand: ");
-            //     // for (var i = 0; i < this.dealerHand.length; i++) {
-            //     //     console.log(this.dealerHand[i].code);
-            //     // }
-
-
-            //     if (this.dealerPoints > this.BLACKJACK) { // Check if the dealer has over 21 after hitting
-            //         alert("*** YOU WON! ***\nThe dealer busted! Total points: " + this.points + "\nDealer's points: " + this.dealerPoints);
-            //         this.gameEnd = true;
-            //         return; // End the function
-            //     }
-
-            //     if (this.gameEnd) {
-            //         if (this.points > this.dealerPoints) {
-            //             alert("*** YOU WON! *** \nTotal points: " + this.points + "\nDealer's points: " + this.dealerPoints);
-            //         }
-            //         else if (this.points === this.dealerPoints) {
-            //             alert("Draw!");
-            //         }
-            //         else {
-            //             alert("You lost! \nTotal points: " + this.points + "\nDealer's points: " + this.dealerPoints);
-            //         }
-            //     }
-            // })
+                // Always check for blackjack first
+                if (this.pPoints === this.BLACKJACK) {
+                    alert("~~~* BLACKJACK *~~~\nYou won!");
+                    return true; // End the function right here
+                }
+                if (this.gameEnd) {
+                    this.checkIfWon();
+                }
+            }).catch(err => {
+                console.log(err);
+            })
         },
         stand: function() {
-            // console.log("USER STANDS");
+            axios.put('/api/blackjack', {
+                action: 'stand',
+            }).then(response => {
+                // Update the variables with the new values
+                this.playerHand = response.data.playerHand;
+                this.pPoints = response.data.playerPoints;
+                this.dealerHand = response.data.dealerHand;
+                this.dPoints = response.data.dealerPoints;
+                this.gameEnd = response.data.gameEnd;
 
-            if (!this.gameEnd) {
-                // Since dealer always goes last, the dealer must still hit if below 17.
-                if (this.dealerPoints < 17) {
-                    this.dealerDraw();
+                this.checkIfWon();
+            })
+        },
+        checkIfWon: function() {
+            // If both player's and dealer's points are 21 or under
+            if (this.pPoints <= this.BLACKJACK && this.dPoints <= this.BLACKJACK) {
+                if (this.pPoints > this.dPoints) {
+                    alert("*** YOU WON! *** \nYour points: " + this.pPoints + "\nDealer's points: " + this.dPoints);
                 }
-                
-                if (this.pPoints > this.dPoints && this.dPoints >= 17) {
-                    alert("*** YOU WON! *** \nTotal points: " + this.pPoints + "\nDealer's points: " + this.dPoints);
+                else if (this.pPoints < this.dPoints) {
+                    alert("You lost! \nYour points: " + this.pPoints + "\nDealer's points: " + this.dPoints);
                 }
-                else if (this.pPoints < this.dPoints && this.dPoints >= 17){
-                    alert("You lost! \nTotal points: " + this.pPoints + "\nDealer's points: " + this.dPoints);
-                }
-                else if (this.pPoints === this.dPoints) {
+                else {
                     alert("Draw!");
                 }
-
             }
-
-            this.gameEnd = true;
-
+            // If only the player busted
+            else if (this.pPoints > this.BLACKJACK && this.dPoints <= this.BLACKJACK) {
+                alert("You busted! \nTotal points: " + this.pPoints + "\nDealer's points: " + this.dPoints);
+            }
+            // If only the dealer busted
+            else if (this.pPoints <= this.BLACKJACK && this.dPoints > this.BLACKJACK) {
+                alert("*** YOU WON! *** \nThe dealer busted! \nYour points: " + this.pPoints + "\nDealer's points: " + this.dPoints);
+            }
+            // If both busted
+            else {
+                alert("Draw! You both busted! \nYour points: " + this.pPoints + "\nDealer's points: " + this.dPoints);
+            } 
         },
-    
     }
 }
 </script>
@@ -159,7 +141,20 @@ h1 {
     font-weight: normal;
     text-decoration: none;
     margin-top: -7px;
+    margin-bottom: -1px;
     padding-bottom: 20px;
+}
+
+#startbutton {
+    width: 10;
+    padding: 8px 16px;
+    margin-bottom: 10px;
+    border: none;
+    background-color: white;
+}
+
+#startbutton:active {
+    font-size: 10px;
 }
 
 #playbuttons {
@@ -173,6 +168,10 @@ h1 {
     margin-left: 10px;
     margin-right: 10px;
     margin-bottom: -50px;
+}
+
+#playbuttons:active {
+    font-size: 12px;
 }
 
 
