@@ -137,7 +137,7 @@ app.post('/api/blackjack/', (req, res) => {
   axios.get('https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1').then(response => {
     data = response.data;
     deckId = response.data.deck_id;
-    console.log("new deckId: ",deckId);
+    // console.log("new deckId: ",deckId);
   }).then(response => {
       // Second get the player's starting cards
       axios.get('https://deckofcardsapi.com/api/deck/' + deckId + '/draw/?count=2').then(response => {
